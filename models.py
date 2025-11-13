@@ -3,20 +3,21 @@ from dataclasses import dataclass, field
 from datetime import datetime, date
 from typing import Optional, Literal
 
-ISO_TS_FMT = "%Y-%m-%dT%H:%M:%SZ"
-ISO_DATE_FMT = "%Y-%m-%d"
+ISO_DATE_FMT = "%Y-%m-%d"          # e.g., 2025-11-14
+ISO_TS_FMT  = "%Y-%m-%dT%H:%M:%S"  # e.g., 2025-11-14T12:34:56
 
 def to_iso_date(d: Optional[date]) -> Optional[str]:
-    """Convert a Python date to an ISO string for DB storage."""
+    """date -> 'YYYY-MM-DD'"""
     return d.strftime(ISO_DATE_FMT) if d else None
 
-def from_iso_date(s: Optional[date]) -> Optional[str]:
-    """Convert a ISO string from DB back to Python date """
-    return datetime.strptime(s, ISO_TS_FMT) if s else None
+def from_iso_date(s: Optional[str]) -> Optional[date]:
+    """'YYYY-MM-DD' -> date"""
+    return datetime.strptime(s, ISO_DATE_FMT).date() if s else None
 
 def now_iso_ts() -> str:
-    """Returns current local timestamp in ISO-like format"""
+    """timestamp for created_at/updated_at"""
     return datetime.now().strftime(ISO_TS_FMT)
+
 
 
 
@@ -51,7 +52,7 @@ class Task:
     description: str = ""
     due_date: Optional[date] = None
     priority: Priority = "Medium"
-    stats: Status = "Todo"
+    status: Status = "Todo"
     created_at: str = field(default_factory=now_iso_ts)
     updated_at: str = field(default_factory=now_iso_ts)
     completed_at: Optional[str] = None
