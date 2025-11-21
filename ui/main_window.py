@@ -37,6 +37,18 @@ class MainWindow(QMainWindow):
         self.act_add_task.triggered.connect(self.on_add_task)
         tb.addAction(self.act_add_task)
 
+        # Edit Task
+        self.act_edit_task = QAction("Edit Task", self)
+        self.act_edit_task.setStatusTip("Edit selected task")
+        self.act_edit_task.triggered.connect(self.on_edit_task)
+        tb.addAction(self.act_edit_task)
+
+        # Delete Task
+        self.act_delete_task = QAction("Delete Task", self)
+        self.act_delete_task.setStatusTip("Delete selected task")
+        self.act_delete_task.triggered.connect(self.on_delete_task)
+        tb.addAction(self.act_delete_task)
+        
         #Status bar feedback
         self.statusBar().showMessage("Ready")
 
@@ -211,4 +223,53 @@ class MainWindow(QMainWindow):
     def _update_task_count(self):
         self.info.setText(f"Tasks: {self._task_count()}")
 
+    def on_edit_task(self):
+        if not self.db:
+            return
 
+        idx = self.table.currentIndex()
+        if not idx.isValid():
+            self.statusBar().showMessage("Select a task first")
+            return
+
+        # get the task object
+        task = self.model.task_at(idx.row())
+        if not task:
+            return
+
+        # open dialog pre-filled
+        dlg = TaskEditorDialog(self, self.cat_pairs, task=task)
+        if dlg.exec_():
+            vals = dlg.values()
+
+            # update DB
+            self.db.update_task(
+                task_id=task.id,
+                title=vals["title"],
+                description=vals["description"],
+                category_id=vals["category_id"],
+                due_date=vals["due_date"],
+                priority=vals["priority"],
+            )
+
+            self.refresh_table()
+            self.statusBar().showMessage(f"Updated task: {vals['title']}")
+
+    def on_delete_task(self):
+        if not self.db:
+            return
+
+        idx = self.table.currentIndex()
+        if not idx.isValid():
+            self.statusBar().showMessage("Select a task first")
+            return
+
+        task = self.model.task_at(idx.row())
+        if not task:
+            return
+
+        # Delete from DB
+        self.db.delete_task(task.id)
+
+        self.refresh_table()
+        self.statusBar().showMessage(f"Deleted Task '{task.title}'")

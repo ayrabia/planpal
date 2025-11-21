@@ -11,9 +11,10 @@ from PyQt5.QtCore import QDate
 
 class TaskEditorDialog(QDialog):
     """Simple pop-up form for creating a new task."""
-    def __init__(self, parent, categories: list[tuple[int, str]]):
+    def __init__(self, parent, categories: list[tuple[int, str]], task = None):
         super().__init__(parent)
-        self.setWindowTitle("Add Task")
+        self.task = task
+        self.setWindowTitle("Edit task" if task else "Add Task")
 
         # --- form widgets ---
         self.title = QLineEdit()

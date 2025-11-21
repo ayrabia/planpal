@@ -102,6 +102,36 @@ class Storage:
         )
         self.conn.commit()
         return self.get_task(cur.lastrowid)
+    
+    def update_task(
+        self,
+        task_id: int,
+        title: str,
+        description: str,
+        category_id: Optional[int],
+        due_date,
+        priority: str,
+    ) -> Task:
+        """Update an existing task"""
+        now = now_iso_ts()
+        cur = self.conn.cursor()
+        cur.execute(
+            """
+            UPDATE tasks
+            SET title = ?, description = ?, category_id = ?, due_date = ?,
+                priority = ?, updated_at = ?
+            WHERE id = ?
+            """,
+            (title, description, category_id, to_iso_date(due_date), priority, now, task_id)
+        )
+        self.conn.commit()
+        return self.get_task(task_id)
+    
+    def delete_task(self, task_id: int) -> None:
+        """Delete task by ID"""
+        cur = self.conn.cursor()
+        cur.execute("DELETE FROM tasks WHERE id = ?", (task_id,))
+        self.conn.commit()
 
     def get_task(self, task_id: int) -> Task:
         """Fetch a single task by id."""
