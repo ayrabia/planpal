@@ -1,5 +1,6 @@
 from PyQt5.QtWidgets import QInputDialog, QMainWindow, QLabel, QToolBar, QAction, QSplitter, QListWidget, QVBoxLayout, \
-    QWidget, QTableView
+    QWidget, QTableView, QMessageBox
+
 from PyQt5.QtCore import Qt
 from storage import Storage
 from ui.task_editor import TaskEditorDialog
@@ -31,6 +32,12 @@ class MainWindow(QMainWindow):
         self.act_add_cat.setStatusTip("Create a new category")
         self.act_add_cat.triggered.connect(self.on_add_category)
         tb.addAction(self.act_add_cat)
+
+        #Delete Category Action
+        self.act_del_cat = QAction("Delete Category", self)
+        self.act_del_cat.setStatusTip("Delete the selected category")
+        self.act_del_cat.triggered.connect(self.on_delete_category)
+        tb.addAction(self.act_del_cat)
         # Add Task action
         self.act_add_task = QAction("Add Task", self)
         self.act_add_task.setStatusTip("Create a new task")
@@ -48,7 +55,9 @@ class MainWindow(QMainWindow):
         self.act_delete_task.setStatusTip("Delete selected task")
         self.act_delete_task.triggered.connect(self.on_delete_task)
         tb.addAction(self.act_delete_task)
-        
+
+
+
         #Status bar feedback
         self.statusBar().showMessage("Ready")
 
@@ -95,7 +104,47 @@ class MainWindow(QMainWindow):
         #Initial render
         self._render_sidebar()
 
+    def on_delete_category(self):
+        """Delete the selected category from sidebar."""
+        if not self.db:
+            return
 
+        row = self.sidebar.currentRow()
+        # rows: 0 = All Tasks, 1 = Today, 2+ = categories
+        if row < 2:
+            self.statusBar().showMessage("Please select a category to delete")
+            return
+
+        idx = row - 2
+        if idx < 0 or idx >= len(self.cat_pairs):
+            self.statusBar().showMessage("No such category")
+            return
+
+        cat_id, cat_name = self.cat_pairs[idx]
+
+        # confirm with the user
+        reply = QMessageBox.question(
+            self,
+            "Delete Category",
+            f"Are you sure you want to delete the category '{cat_name}'?\n"
+            "Tasks in this category will remain, but will no longer be linked to it.",
+            QMessageBox.Yes | QMessageBox.No,
+        )
+
+        if reply != QMessageBox.Yes:
+            return
+
+        # delete in DB
+        self.db.delete_category(cat_id)
+
+        # reload categories + sidebar + table
+        self._load_categories()
+        self._render_sidebar()
+        self.sidebar.setCurrentRow(0)
+        self.refresh_table()
+
+        # ✅ now actually interpolate cat_name
+        self.statusBar().showMessage(f"Deleted Category '{cat_name}'")
     def on_init_data(self):
         """Create DB (if missing) and ensure default user exists"""
         try:

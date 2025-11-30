@@ -1,5 +1,7 @@
 import sqlite3
 from typing import List, Optional
+from unicodedata import category
+
 from models import User, Category, Task, to_iso_date, from_iso_date, now_iso_ts
 
 DB_PATH = "planpal.sqlite3"
@@ -78,6 +80,12 @@ class Storage:
         cur = self.conn.cursor()
         cur.execute("SELECT * FROM categories ORDER BY name ASC")
         return [Category(id = r["id"], name = r["name"], color = r["color"]) for r in cur.fetchall()]
+
+    def delete_category(self, category_id: int) -> None:
+        """Delete a category by id."""
+        cur = self.conn.cursor()
+        cur.execute("DELETE FROM categories WHERE id = ?", (category_id,))
+        self.conn.commit()
 
     #------------ TASKS ------------
     def add_task(

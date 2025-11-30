@@ -1,20 +1,20 @@
-# ui/task_table.py
 """
 Read-only table model for tasks.
-Shows: ✓, Title, Category, Due Date, Priority
+Shows: ✓, Title, Description, Category, Due Date, Priority
 """
 
 from typing import List, Dict
 from PyQt5.QtCore import QAbstractTableModel, Qt, QModelIndex, QVariant
 from models import Task
 
-COLUMNS = ["✓", "Title", "Category", "Due Date", "Priority"]
+COLUMNS = ["✓", "Title", "Description", "Category", "Due Date", "Priority"]
+
 
 class TaskTableModel(QAbstractTableModel):
     def __init__(self, tasks: List[Task], cat_lookup: Dict[int, str]):
         super().__init__()
-        self.tasks = tasks
-        self.cat_lookup = cat_lookup  # {category_id: name}
+        self.tasks = tasks              # list of Task objects
+        self.cat_lookup = cat_lookup    # {category_id: name}
 
     def set_data(self, tasks: List[Task], cat_lookup: Dict[int, str]):
         """Replace all data and notify the view."""
@@ -23,7 +23,8 @@ class TaskTableModel(QAbstractTableModel):
         self.cat_lookup = cat_lookup
         self.endResetModel()
 
-    # --- required by Qt ---
+
+
     def rowCount(self, parent: QModelIndex = QModelIndex()) -> int:
         return len(self.tasks)
 
@@ -45,23 +46,38 @@ class TaskTableModel(QAbstractTableModel):
         col = index.column()
 
         if role in (Qt.DisplayRole, Qt.EditRole):
+            # ✓ column
             if col == 0:
                 return "✓" if t.status == "Done" else ""
+
+            # Title
             if col == 1:
                 return t.title or ""
+
+
             if col == 2:
-                return self.cat_lookup.get(t.category_id or -1, "")
+                desc = t.description or ""
+
+                return desc
+
+            # Category name
             if col == 3:
-                return t.due_date.isoformat() if t.due_date else ""
+                return self.cat_lookup.get(t.category_id or -1, "")
+
+            # Due Date
             if col == 4:
+                return t.due_date.isoformat() if t.due_date else ""
+
+            # Priority
+            if col == 5:
                 return t.priority or ""
 
-        # Make checkmark column centered
+        # center the checkmark column
         if role == Qt.TextAlignmentRole and col == 0:
             return Qt.AlignCenter
 
         return QVariant()
 
-    # helper if you need the task for a row
+
     def task_at(self, row: int) -> Task:
         return self.tasks[row]
