@@ -61,7 +61,7 @@ class MainWindow(QMainWindow):
         splitter.addWidget(self.sidebar)
         self.sidebar.setMaximumWidth(240)
 
-        self.sidebar.currentRowChanged.connect(lambda _: self.refresh_table)
+        self.sidebar.currentRowChanged.connect(lambda _: self.refresh_table())
 
         #Right: placeholder panel (Will have the table later)
         right = QWidget()
