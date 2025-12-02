@@ -26,11 +26,13 @@ class User:
     """Minimal user model for a single-user local app"""
     id: int | None
     username: str
+    password: str | None = None
 
 @dataclass
 class Category:
     """Simple category model for a single-user local app"""
     id: int | None
+    user_id: int
     name: str
     color: str | None = None
 

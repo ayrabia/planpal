@@ -16,7 +16,7 @@ class TaskEditorDialog(QDialog):
         self.task = task
         self.setWindowTitle("Edit task" if task else "Add Task")
 
-        # --- form widgets ---
+
         self.title = QLineEdit()
         self.desc = QTextEdit()
         self.priority = QComboBox()
@@ -53,6 +53,28 @@ class TaskEditorDialog(QDialog):
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
         layout.addWidget(buttons)
+
+        # --- pre-fill if editing an existing task ---
+        if self.task is not None:
+            self.title.setText(self.task.title)
+            self.desc.setPlainText(self.task.description or "")
+
+            idx = self.priority.findText(self.task.priority)
+            if idx != -1:
+                self.priority.setCurrentIndex(idx)
+
+            if self.task.category_id is not None:
+                for i in range(self.category.count()):
+                    if self.category.itemData(i) == self.task.category_id:
+                        self.category.setCurrentIndex(i)
+                        break
+
+            if self.task.due_date is not None:
+                self.due.setDate(
+                    QDate(self.task.due_date.year,
+                          self.task.due_date.month,
+                          self.task.due_date.day)
+                )
 
     def values(self) -> dict:
         """Return the filled-in values as a dict."""
